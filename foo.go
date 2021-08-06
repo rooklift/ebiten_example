@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 
 	"github.com/rooklift/ebiten_example/wavreaderseeker"
@@ -18,7 +19,11 @@ const (
 )
 
 type Game struct{
+
 	image *ebiten.Image
+
+	audio_context *audio.Context
+	audio_player  *audio.Player
 
 	inited bool
 	width int
@@ -47,8 +52,23 @@ func (g *Game) Update() error {
 		g.height = h
 		g.image = ebiten.NewImage(g.width, g.height)
 
+		g.audio_context = audio.NewContext(44100)
+
+		wrs, err := wavreaderseeker.NewWavReaderSeeker("./sounds/test.wav")
+
+		if err != nil {
+			panic(err)
+		}
+
+		g.audio_player, err = audio.NewPlayer(g.audio_context, wrs)
+		if err != nil {
+			panic(err)
+		}
+
 		g.speedx = 2
 		g.speedy = 1
+
+		g.audio_player.Play()
 
 		g.inited = true
 	}

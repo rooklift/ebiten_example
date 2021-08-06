@@ -1,10 +1,11 @@
 package wavreaderseeker
 
-// UNTESTED object to satisfy ebiten's requirements for an io.Reader for sound.
+// Object to satisfy ebiten's requirements for an io.Reader for sound.
 // This all relies on the wav files being the correct (16 bit stereo) format.
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 )
@@ -26,7 +27,10 @@ func NewWavReaderSeeker(s string) (*WavReaderSeeker, error) {
 
 	// FIXME - we could check the wav's fmt chunk for the correct channels and bytes-per-sample values...
 
-	return &WavReaderSeeker{data: bytes, pos: DATA_START_POS}, nil
+	fmt.Printf("%s: Loaded %d bytes\n", s, len(bytes))
+	ret := &WavReaderSeeker{data: bytes, pos: DATA_START_POS}
+
+	return ret, nil
 }
 
 func (self *WavReaderSeeker) Read(p []byte) (n int, err error) {
@@ -38,7 +42,7 @@ func (self *WavReaderSeeker) Read(p []byte) (n int, err error) {
 		return 0, io.EOF
 	}
 
-	advance := copy(p, self.data)		// Copy returns the number of elements copied, which will be the minimum of len(dst) and len(src)
+	advance := copy(p, self.data[self.pos:])		// Copy returns the number of elements copied, which will be the minimum of len(dst) and len(src)
 	self.pos += advance
 
 	return advance, nil
