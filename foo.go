@@ -101,6 +101,8 @@ func init() {
 		}
 
 		sprites[info.Name()] = ebiten.NewImageFromImage(img)
+
+		f.Close()
     }
 }
 
