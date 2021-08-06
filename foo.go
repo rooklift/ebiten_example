@@ -26,7 +26,7 @@ type Game struct{
 	image *ebiten.Image
 
 	audio_context *audio.Context
-	players []*audio.Player
+	audio_players []*audio.Player
 
 	px int
 	py int
@@ -35,17 +35,17 @@ type Game struct{
 	tick int
 }
 
-func (g *Game) DrawSprite(x int, y int, img *ebiten.Image) {
+func (self *Game) DrawSprite(x int, y int, img *ebiten.Image) {
 
 	e_width, e_height := img.Size()
 
 	opts := new(ebiten.DrawImageOptions)
 	opts.GeoM.Translate(float64(x) - (float64(e_width) / 2), float64(y) - (float64(e_height) / 2.0))
 
-	g.image.DrawImage(img, opts)
+	self.image.DrawImage(img, opts)
 }
 
-func (g *Game) PlaySound(s string) {
+func (self *Game) PlaySound(s string) {
 
 	soundbytes, ok := sounds[s]
 	if (!ok) {
@@ -55,76 +55,76 @@ func (g *Game) PlaySound(s string) {
 
 	wav_reader := bytes.NewReader(soundbytes[44:])		// wav_reader satisfies io.Reader/Seeker. Relies on the WAV being 16 bit stereo.
 
-	player, err := audio.NewPlayer(g.audio_context, wav_reader)
+	player, err := audio.NewPlayer(self.audio_context, wav_reader)
 	if err != nil {
 		return
 	}
 
-	g.players = append(g.players, player)
+	self.audio_players = append(self.audio_players, player)
 
 	player.Play()
 }
 
-func (g *Game) Update() error {
+func (self *Game) Update() error {
 
-	if (!g.inited) {
+	if (!self.inited) {
 
-		g.audio_context = audio.NewContext(44100)
+		self.audio_context = audio.NewContext(44100)
 
-		g.width = w
-		g.height = h
-		g.image = ebiten.NewImage(g.width, g.height)
+		self.width = w
+		self.height = h
+		self.image = ebiten.NewImage(self.width, self.height)
 
-		g.speedx = 2
-		g.speedy = 1
+		self.speedx = 2
+		self.speedy = 1
 
-		g.inited = true
+		self.inited = true
 	}
 
 	var active_players []*audio.Player
 
-	for _, player := range g.players {
+	for _, player := range self.audio_players {
 		if player.IsPlaying() {
 			active_players = append(active_players, player)
 		}
 	}
-	g.players = active_players
+	self.audio_players = active_players
 
-	g.tick++
+	self.tick++
 
-	if (g.px < 0) {
-		g.speedx = 2
-		g.PlaySound("test.wav")
+	if (self.px < 0) {
+		self.speedx = 2
+		self.PlaySound("test.wav")
 	}
-	if (g.px >= g.width) {
-		g.speedx = -2
-		g.PlaySound("test.wav")
+	if (self.px >= self.width) {
+		self.speedx = -2
+		self.PlaySound("test.wav")
 	}
-	if (g.py < 0) {
-		g.speedy = 1
-		g.PlaySound("test.wav")
+	if (self.py < 0) {
+		self.speedy = 1
+		self.PlaySound("test.wav")
 	}
-	if (g.py >= g.height) {
-		g.speedy = -1
-		g.PlaySound("test.wav")
+	if (self.py >= self.height) {
+		self.speedy = -1
+		self.PlaySound("test.wav")
 	}
 
-	g.px += g.speedx
-	g.py += g.speedy
+	self.px += self.speedx
+	self.py += self.speedy
 
 	return nil
 }
 
-func (g *Game) Draw(screen *ebiten.Image) {
+func (self *Game) Draw(screen *ebiten.Image) {
 
-	g.image.Clear()
-	g.DrawSprite(g.px, g.py, sprites["powerup.png"])
+	self.image.Clear()
+	self.DrawSprite(self.px, self.py, sprites["powerup.png"])
 
-	screen.DrawImage(g.image, nil)
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f -- FPS: %0.2f -- Players: %v", ebiten.CurrentTPS(), ebiten.CurrentFPS(), len(g.players)))
+	screen.DrawImage(self.image, nil)
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f -- FPS: %0.2f -- Players: %v", ebiten.CurrentTPS(), ebiten.CurrentFPS(), len(self.audio_players)))
 }
 
-func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
+func (self *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return w, h
 }
 
