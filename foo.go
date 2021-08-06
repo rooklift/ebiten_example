@@ -8,6 +8,8 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+
+	"github.com/rooklift/ebiten_example/wavreaderseeker"
 )
 
 const (
@@ -78,10 +80,12 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 // ------------------------------------------------------------------------------------------------
 
 var sprites map[string]*ebiten.Image
+var sounds map[string]*wavreaderseeker.WavReaderSeeker
 
 func init() {
 
 	sprites = make(map[string]*ebiten.Image)
+	sounds = make(map[string]*wavreaderseeker.WavReaderSeeker)
 
 	files, err := ioutil.ReadDir("./sprites")
     if err != nil {
