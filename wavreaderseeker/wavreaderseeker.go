@@ -5,32 +5,18 @@ package wavreaderseeker
 
 import (
 	"errors"
-	"fmt"
 	"io"
-	"io/ioutil"
 )
 
 const DATA_START_POS = 44
 
 type WavReaderSeeker struct {
-	data []byte
-	pos int
+	Data []byte
+	Pos int
 }
 
-func NewWavReaderSeeker(s string) (*WavReaderSeeker, error) {
-
-	bytes, err := ioutil.ReadFile(s)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// FIXME - we could check the wav's fmt chunk for the correct channels and bytes-per-sample values...
-
-	fmt.Printf("%s: Loaded %d bytes\n", s, len(bytes))
-	ret := &WavReaderSeeker{data: bytes, pos: DATA_START_POS}
-
-	return ret, nil
+func NewWavReaderSeeker(bytes []byte) *WavReaderSeeker {
+	return &WavReaderSeeker{Data: bytes, Pos: DATA_START_POS}
 }
 
 func (self *WavReaderSeeker) Read(p []byte) (n int, err error) {
@@ -38,12 +24,12 @@ func (self *WavReaderSeeker) Read(p []byte) (n int, err error) {
 	// Read reads up to len(p) bytes into p.
 	// It returns the number of bytes read (0 <= n <= len(p)) and any error encountered.
 
-	if self.pos >= len(self.data) {
+	if self.Pos >= len(self.Data) {
 		return 0, io.EOF
 	}
 
-	advance := copy(p, self.data[self.pos:])		// Copy returns the number of elements copied, which will be the minimum of len(dst) and len(src)
-	self.pos += advance
+	advance := copy(p, self.Data[self.Pos:])		// Copy returns the number of elements copied, which will be the minimum of len(dst) and len(src)
+	self.Pos += advance
 
 	return advance, nil
 }
@@ -62,9 +48,9 @@ func (self *WavReaderSeeker) Seek(offset int64, whence int) (int64, error) {
 	case io.SeekStart:
 		new_pos = DATA_START_POS
 	case io.SeekCurrent:
-		new_pos = self.pos
+		new_pos = self.Pos
 	case io.SeekEnd:
-		new_pos = len(self.data)
+		new_pos = len(self.Data)
 	default:
 		panic("Invalid whence")
 	}
@@ -75,7 +61,7 @@ func (self *WavReaderSeeker) Seek(offset int64, whence int) (int64, error) {
 		return 0, errors.New("Attempt to seek to before the data start")
 	}
 
-	self.pos = new_pos
+	self.Pos = new_pos
 
-	return int64(self.pos), nil
+	return int64(self.Pos), nil
 }

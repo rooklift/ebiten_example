@@ -20,18 +20,20 @@ const (
 
 type Game struct{
 
+	inited bool
+
+	width int
+	height int
 	image *ebiten.Image
 
 	audio_context *audio.Context
-	audio_player  *audio.Player
+	active_players []*audio.Player
 
-	inited bool
-	width int
-	height int
 	px int
 	py int
 	speedx int
 	speedy int
+	tick int
 }
 
 func (g *Game) DrawSprite(x int, y int, img *ebiten.Image) {
@@ -44,34 +46,45 @@ func (g *Game) DrawSprite(x int, y int, img *ebiten.Image) {
 	g.image.DrawImage(img, opts)
 }
 
+func (g *Game) PlaySound(s string) {
+
+	soundbytes, ok := sounds[s]
+	if (!ok) {
+		fmt.Printf("No such sound: %v\n", s)
+		return
+	}
+
+	wrs := wavreaderseeker.NewWavReaderSeeker(soundbytes)
+
+	player, err := audio.NewPlayer(g.audio_context, wrs)
+	if err != nil {
+		return
+	}
+
+	g.active_players = append(g.active_players, player)
+
+	player.Play()
+}
+
 func (g *Game) Update() error {
 
 	if (!g.inited) {
+
+		g.audio_context = audio.NewContext(44100)
 
 		g.width = w
 		g.height = h
 		g.image = ebiten.NewImage(g.width, g.height)
 
-		g.audio_context = audio.NewContext(44100)
-
-		wrs, err := wavreaderseeker.NewWavReaderSeeker("./sounds/test.wav")
-
-		if err != nil {
-			panic(err)
-		}
-
-		g.audio_player, err = audio.NewPlayer(g.audio_context, wrs)
-		if err != nil {
-			panic(err)
-		}
-
 		g.speedx = 2
 		g.speedy = 1
 
-		g.audio_player.Play()
+		g.PlaySound("test.wav")
 
 		g.inited = true
 	}
+
+	g.tick++
 
 	if (g.px < 0) { g.speedx = 2 }
 	if (g.px >= g.width) { g.speedx = -2 }
@@ -100,12 +113,16 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 // ------------------------------------------------------------------------------------------------
 
 var sprites map[string]*ebiten.Image
-var sounds map[string]*wavreaderseeker.WavReaderSeeker
+var sounds map[string][]byte
 
 func init() {
+	load_sprites()
+	load_sounds()
+}
+
+func load_sprites() {
 
 	sprites = make(map[string]*ebiten.Image)
-	sounds = make(map[string]*wavreaderseeker.WavReaderSeeker)
 
 	files, err := ioutil.ReadDir("./sprites")
     if err != nil {
@@ -123,6 +140,26 @@ func init() {
 			} else {
 				sprites[info.Name()] = ebiten.NewImageFromImage(img)
 			}
+			f.Close()
+		}
+    }
+}
+
+func load_sounds() {
+
+	sounds = make(map[string][]byte)
+
+	files, err := ioutil.ReadDir("./sounds")
+    if err != nil {
+        panic(err)
+    }
+
+	for _, info := range files {
+		f, err := os.Open("./sounds/" + info.Name())
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			sounds[info.Name()], _ = ioutil.ReadAll(f)
 			f.Close()
 		}
     }
