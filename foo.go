@@ -17,6 +17,8 @@ const (
 	h = 400
 )
 
+// ------------------------------------------------------------------------------------------------
+
 type Game struct{
 
 	inited bool
@@ -34,6 +36,8 @@ type Game struct{
 	speedy int
 	tick int
 }
+
+// ------------------------------------------------------------------------------------------------
 
 func (self *Game) DrawSprite(x int, y int, img *ebiten.Image) {
 
@@ -65,30 +69,39 @@ func (self *Game) PlaySound(s string) {
 	player.Play()
 }
 
-func (self *Game) Update() error {
+// ------------------------------------------------------------------------------------------------
 
-	if (!self.inited) {
+func (self *Game) Init() {
 
-		self.audio_context = audio.NewContext(44100)
+	self.audio_context = audio.NewContext(44100)
 
-		self.width = w
-		self.height = h
-		self.image = ebiten.NewImage(self.width, self.height)
+	self.width = w
+	self.height = h
+	self.image = ebiten.NewImage(self.width, self.height)
 
-		self.speedx = 2
-		self.speedy = 1
+	self.speedx = 2
+	self.speedy = 1
 
-		self.inited = true
-	}
+	self.inited = true
+}
+
+func (self *Game) PurgeAudio() {
 
 	var active_players []*audio.Player
 
 	for _, player := range self.audio_players {
 		if player.IsPlaying() {
 			active_players = append(active_players, player)
+		} else {
+			player.Close()		// Not sure if this is needed.
 		}
 	}
 	self.audio_players = active_players
+}
+
+// ------------------------------------------------------------------------------------------------
+
+func (self *Game) GameLogic() {
 
 	self.tick++
 
@@ -111,6 +124,19 @@ func (self *Game) Update() error {
 
 	self.px += self.speedx
 	self.py += self.speedy
+}
+
+// ------------------------------------------------------------------------------------------------
+
+func (self *Game) Update() error {
+
+	if (!self.inited) {
+		self.Init()
+	}
+
+	self.PurgeAudio()
+
+	self.GameLogic()
 
 	return nil
 }
@@ -132,6 +158,22 @@ func (self *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 var sprites map[string]*ebiten.Image
 var sounds map[string][]byte
+
+func main() {
+
+	load_sprites()
+	load_sounds()
+
+	g := new(Game)
+
+	ebiten.SetWindowSize(w * 2, h * 2)
+	ebiten.SetWindowTitle("Foo")
+
+	err := ebiten.RunGame(g)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func load_sprites() {
 
@@ -176,20 +218,4 @@ func load_sounds() {
 			f.Close()
 		}
     }
-}
-
-func main() {
-
-	load_sprites()
-	load_sounds()
-
-	g := new(Game)
-
-	ebiten.SetWindowSize(w * 2, h * 2)
-	ebiten.SetWindowTitle("Foo")
-
-	err := ebiten.RunGame(g)
-	if err != nil {
-		panic(err)
-	}
 }
