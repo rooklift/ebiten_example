@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"image/png"
 	"os"
@@ -57,7 +58,7 @@ func (self *Game) PlaySound(s string) {
 		return
 	}
 
-	wav_reader := bytes.NewReader(soundbytes[44:])		// wav_reader satisfies io.Reader/Seeker. Relies on the WAV being 16 bit stereo.
+	wav_reader := bytes.NewReader(soundbytes)		// wav_reader satisfies io.Reader/Seeker. Relies on the WAV being 16 bit stereo.
 
 	player, err := audio.NewPlayer(self.audio_context, wav_reader)
 	if err != nil {
@@ -214,6 +215,7 @@ func load_sounds() {
 		if err != nil {
 			fmt.Println(err)
 		} else {
+			f.Seek(44, io.SeekStart)						// Skip WAV header
 			sounds[info.Name()], _ = ioutil.ReadAll(f)
 			f.Close()
 		}
