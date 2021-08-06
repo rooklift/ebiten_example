@@ -26,7 +26,7 @@ type Game struct{
 	image *ebiten.Image
 
 	audio_context *audio.Context
-	active_players []*audio.Player
+	players []*audio.Player
 
 	px int
 	py int
@@ -53,14 +53,14 @@ func (g *Game) PlaySound(s string) {
 		return
 	}
 
-	wav_reader := bytes.NewReader(soundbytes[44:])		// Relies on the WAV being 16 bit stereo
+	wav_reader := bytes.NewReader(soundbytes[44:])		// wav_reader satisfies io.Reader/Seeker. Relies on the WAV being 16 bit stereo.
 
 	player, err := audio.NewPlayer(g.audio_context, wav_reader)
 	if err != nil {
 		return
 	}
 
-	g.active_players = append(g.active_players, player)
+	g.players = append(g.players, player)
 
 	player.Play()
 }
@@ -78,17 +78,36 @@ func (g *Game) Update() error {
 		g.speedx = 2
 		g.speedy = 1
 
-		g.PlaySound("test.wav")
-
 		g.inited = true
 	}
 
+	var active_players []*audio.Player
+
+	for _, player := range g.players {
+		if player.IsPlaying() {
+			active_players = append(active_players, player)
+		}
+	}
+	g.players = active_players
+
 	g.tick++
 
-	if (g.px < 0) { g.speedx = 2 }
-	if (g.px >= g.width) { g.speedx = -2 }
-	if (g.py < 0) { g.speedy = 1 }
-	if (g.py >= g.height) { g.speedy = -1 }
+	if (g.px < 0) {
+		g.speedx = 2
+		g.PlaySound("test.wav")
+	}
+	if (g.px >= g.width) {
+		g.speedx = -2
+		g.PlaySound("test.wav")
+	}
+	if (g.py < 0) {
+		g.speedy = 1
+		g.PlaySound("test.wav")
+	}
+	if (g.py >= g.height) {
+		g.speedy = -1
+		g.PlaySound("test.wav")
+	}
 
 	g.px += g.speedx
 	g.py += g.speedy
@@ -102,7 +121,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.DrawSprite(g.px, g.py, sprites["powerup.png"])
 
 	screen.DrawImage(g.image, nil)
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f -- FPS: %0.2f", ebiten.CurrentTPS(), ebiten.CurrentFPS()))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f -- FPS: %0.2f -- Players: %v", ebiten.CurrentTPS(), ebiten.CurrentFPS(), len(g.players)))
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
