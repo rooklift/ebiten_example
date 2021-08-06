@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"image/png"
@@ -9,8 +10,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-
-	"github.com/rooklift/ebiten_example/wavreaderseeker"
 )
 
 const (
@@ -54,9 +53,9 @@ func (g *Game) PlaySound(s string) {
 		return
 	}
 
-	wrs := wavreaderseeker.NewWavReaderSeeker(soundbytes)
+	wav_reader := bytes.NewReader(soundbytes[44:])		// Relies on the WAV being 16 bit stereo
 
-	player, err := audio.NewPlayer(g.audio_context, wrs)
+	player, err := audio.NewPlayer(g.audio_context, wav_reader)
 	if err != nil {
 		return
 	}
