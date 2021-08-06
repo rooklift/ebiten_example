@@ -187,7 +187,9 @@ func main() {
 
 	ebiten.SetWindowSize(w * 2, h * 2)
 	ebiten.SetWindowTitle("Foo")
-	if err := ebiten.RunGame(g); err != nil {
+
+	err := ebiten.RunGame(g)
+	if err != nil {
 		panic(err)
 	}
 }
