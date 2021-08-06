@@ -133,11 +133,6 @@ func (self *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 var sprites map[string]*ebiten.Image
 var sounds map[string][]byte
 
-func init() {
-	load_sprites()
-	load_sounds()
-}
-
 func load_sprites() {
 
 	sprites = make(map[string]*ebiten.Image)
@@ -184,6 +179,9 @@ func load_sounds() {
 }
 
 func main() {
+
+	load_sprites()
+	load_sounds()
 
 	g := new(Game)
 
