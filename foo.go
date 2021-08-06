@@ -15,33 +15,6 @@ const (
 	h = 400
 )
 
-var sprites map[string]*ebiten.Image
-
-func init() {
-
-	sprites = make(map[string]*ebiten.Image)
-
-	files, err := ioutil.ReadDir("./sprites")
-    if err != nil {
-        panic(err)
-    }
-
-	for _, info := range files {
-
-		f, err := os.Open("./sprites/" + info.Name())
-		if err != nil {
-			panic(err)
-		}
-
-		img, err := png.Decode(f)
-		if err != nil {
-			panic(err)
-		}
-
-		sprites[info.Name()] = ebiten.NewImageFromImage(img)
-    }
-}
-
 type Game struct{
 	image *ebiten.Image
 
@@ -100,6 +73,35 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return w, h
+}
+
+// ------------------------------------------------------------------------------------------------
+
+var sprites map[string]*ebiten.Image
+
+func init() {
+
+	sprites = make(map[string]*ebiten.Image)
+
+	files, err := ioutil.ReadDir("./sprites")
+    if err != nil {
+        panic(err)
+    }
+
+	for _, info := range files {
+
+		f, err := os.Open("./sprites/" + info.Name())
+		if err != nil {
+			panic(err)
+		}
+
+		img, err := png.Decode(f)
+		if err != nil {
+			panic(err)
+		}
+
+		sprites[info.Name()] = ebiten.NewImageFromImage(img)
+    }
 }
 
 func main() {
