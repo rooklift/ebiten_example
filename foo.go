@@ -89,20 +89,18 @@ func init() {
     }
 
 	for _, info := range files {
-
 		f, err := os.Open("./sprites/" + info.Name())
 		if err != nil {
-			panic(err)
+			fmt.Println(err)
+		} else {
+			img, err := png.Decode(f)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				sprites[info.Name()] = ebiten.NewImageFromImage(img)
+			}
+			f.Close()
 		}
-
-		img, err := png.Decode(f)
-		if err != nil {
-			panic(err)
-		}
-
-		sprites[info.Name()] = ebiten.NewImageFromImage(img)
-
-		f.Close()
     }
 }
 
