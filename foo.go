@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"image/png"
 	"os"
 
@@ -14,22 +15,31 @@ const (
 	h = 400
 )
 
-var powerup *ebiten.Image
+var sprites map[string]*ebiten.Image
 
 func init() {
 
-	f, err := os.Open("powerup.png")
-	if err != nil {
-		panic("Couldn't read infile")
-	}
-	defer f.Close()
+	sprites = make(map[string]*ebiten.Image)
 
-	img, err := png.Decode(f)
-	if err != nil {
-		panic("Couldn't parse infile")
-	}
+	files, err := ioutil.ReadDir("./sprites")
+    if err != nil {
+        panic(err)
+    }
 
-	powerup = ebiten.NewImageFromImage(img)
+	for _, info := range files {
+
+		f, err := os.Open("./sprites/" + info.Name())
+		if err != nil {
+			panic(err)
+		}
+
+		img, err := png.Decode(f)
+		if err != nil {
+			panic(err)
+		}
+
+		sprites[info.Name()] = ebiten.NewImageFromImage(img)
+    }
 }
 
 type Game struct{
@@ -82,7 +92,7 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 
 	g.image.Clear()
-	g.DrawSprite(g.px, g.py, powerup)
+	g.DrawSprite(g.px, g.py, sprites["powerup.png"])
 
 	screen.DrawImage(g.image, nil)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f -- FPS: %0.2f", ebiten.CurrentTPS(), ebiten.CurrentFPS()))
