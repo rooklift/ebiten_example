@@ -62,7 +62,7 @@ func (self *WavReaderSeeker) Seek(offset int64, whence int) (int64, error) {
 	case io.SeekStart:
 		new_pos = DATA_START_POS
 	case io.SeekCurrent:
-		new_pos = int(self.pos)
+		new_pos = self.pos
 	case io.SeekEnd:
 		new_pos = len(self.data)
 	default:
