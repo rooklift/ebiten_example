@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"image/png"
+	"math"
 	"os"
 	"path/filepath"
 
@@ -105,7 +106,7 @@ func (self *Game) Draw(screen *ebiten.Image) {
 
 	screen.DrawImage(self.image, nil)
 
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f -- FPS: %0.2f -- Players: %v", ebiten.CurrentTPS(), ebiten.CurrentFPS(), len(self.audio_players)))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f -- FPS: %0.2f -- Sounds: %v", ebiten.CurrentTPS(), ebiten.CurrentFPS(), len(self.audio_players)))
 }
 
 func (self *Game) Update() error {
@@ -113,7 +114,7 @@ func (self *Game) Update() error {
 	if (!self.inited) {
 		self.audio_context = audio.NewContext(44100)
 		self.image = ebiten.NewImage(self.width, self.height)
-		self.entities = append(self.entities, NewEntity(self, POWERUP, 16, 16, 2, 1, "powerup.png"))
+		self.entities = append(self.entities, NewEntity(self, PLAYER, 16, 16, 0, 0, "ship.png"))
 		self.inited = true
 	}
 
@@ -167,20 +168,24 @@ func (self *Game) PurgeAudio() {
 type EntityType int
 
 const (
-	POWERUP	EntityType = iota
+	PLAYER				EntityType = iota
 )
 
 type Entity struct {
 	game				*Game
 	t					EntityType
-	x					int
-	y					int
-	speedx				int
-	speedy				int
+	x					float64
+	y					float64
+	speedx				float64
+	speedy				float64
 	sprite_string		string
 }
 
-func NewEntity(game *Game, t EntityType, x int, y int, speedx int, speedy int, sprite_string string) *Entity {
+func NewEntity(game *Game, t EntityType, x float64, y float64, speedx float64, speedy float64, sprite_string string) *Entity {
+
+	if sprites[sprite_string] == nil {
+		panic("NewEntity: unknown sprite")
+	}
 
 	ret := &Entity{
 		game: game,
@@ -200,31 +205,53 @@ func (self *Entity) Draw() {
 	img := sprites[self.sprite_string]
 	e_width, e_height := img.Size()
 	opts := new(ebiten.DrawImageOptions)
-	opts.GeoM.Translate(float64(self.x) - (float64(e_width) / 2), float64(self.y) - (float64(e_height) / 2.0))
+	opts.GeoM.Translate(self.x - (float64(e_width) / 2), self.y - (float64(e_height) / 2.0))
 
 	self.game.image.DrawImage(img, opts)
 }
 
 func (self *Entity) Behave() {
 
-	if (self.x < 0) {
-		self.speedx = 2
-		self.game.PlaySound("test.wav")
-	}
-	if (self.x >= self.game.width) {
-		self.speedx = -2
-		self.game.PlaySound("test.wav")
-	}
-	if (self.y < 0) {
-		self.speedy = 1
-		self.game.PlaySound("test.wav")
-	}
-	if (self.y >= self.game.height) {
-		self.speedy = -1
-		self.game.PlaySound("test.wav")
-	}
+	switch self.t {
 
-	self.x += self.speedx
-	self.y += self.speedy
+	case PLAYER:
+
+		if ebiten.IsKeyPressed(ebiten.KeyD) {
+			self.speedx += 0.1
+		}
+		if ebiten.IsKeyPressed(ebiten.KeyA) {
+			self.speedx -= 0.1
+		}
+		if ebiten.IsKeyPressed(ebiten.KeyS) {
+			self.speedy += 0.1
+		}
+		if ebiten.IsKeyPressed(ebiten.KeyW) {
+			self.speedy -= 0.1
+		}
+
+		if (self.x < 0) {
+			self.speedx = math.Abs(self.speedx)
+			self.x = 0
+			self.game.PlaySound("test.wav")
+		}
+		if (self.x > float64(self.game.width)) {
+			self.speedx = math.Abs(self.speedx) * -1
+			self.x = float64(self.game.width)
+			self.game.PlaySound("test.wav")
+		}
+		if (self.y < 0) {
+			self.speedy = math.Abs(self.speedy)
+			self.y = 0
+			self.game.PlaySound("test.wav")
+		}
+		if (self.y > float64(self.game.height)) {
+			self.speedy = math.Abs(self.speedy) * -1
+			self.y = float64(self.game.height)
+			self.game.PlaySound("test.wav")
+		}
+
+		self.x += self.speedx
+		self.y += self.speedy
+	}
 }
 
