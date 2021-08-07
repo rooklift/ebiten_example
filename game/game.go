@@ -27,9 +27,9 @@ func load_sprites(sprites_path string) {
 	sprites = make(map[string]*ebiten.Image)
 
 	files, err := ioutil.ReadDir(sprites_path)
-    if err != nil {
-        panic(err)
-    }
+	if err != nil {
+		panic(err)
+	}
 
 	for _, info := range files {
 		f, err := os.Open(filepath.Join(sprites_path, info.Name()))
@@ -44,7 +44,7 @@ func load_sprites(sprites_path string) {
 			}
 			f.Close()
 		}
-    }
+	}
 }
 
 func load_sounds(sounds_path string) {
@@ -52,9 +52,9 @@ func load_sounds(sounds_path string) {
 	sounds = make(map[string][]byte)
 
 	files, err := ioutil.ReadDir(sounds_path)
-    if err != nil {
-        panic(err)
-    }
+	if err != nil {
+		panic(err)
+	}
 
 	for _, info := range files {
 		f, err := os.Open(filepath.Join(sounds_path, info.Name()))
@@ -65,7 +65,7 @@ func load_sounds(sounds_path string) {
 			sounds[info.Name()], _ = ioutil.ReadAll(f)
 			f.Close()
 		}
-    }
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
