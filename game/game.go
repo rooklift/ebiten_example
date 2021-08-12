@@ -2,6 +2,7 @@ package game
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -14,6 +15,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
+
+var USER_QUIT = errors.New("User quit")
 
 var sprites map[string]*ebiten.Image
 var sounds map[string][]byte
@@ -106,7 +109,8 @@ func (self *Game) Draw(screen *ebiten.Image) {
 
 	screen.DrawImage(self.image, nil)
 
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f -- FPS: %0.2f -- Sounds: %v", ebiten.CurrentTPS(), ebiten.CurrentFPS(), len(self.audio_players)))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("Vsync: %v -- TPS: %0.2f -- FPS: %0.2f -- Sounds: %v",
+		ebiten.IsVsyncEnabled(), ebiten.CurrentTPS(), ebiten.CurrentFPS(), len(self.audio_players)))
 }
 
 func (self *Game) Update() error {
@@ -124,7 +128,11 @@ func (self *Game) Update() error {
 		ent.Behave()
 	}
 
-	return nil
+	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
+		return USER_QUIT
+	} else {
+		return nil
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
