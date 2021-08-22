@@ -80,7 +80,6 @@ type Game struct {
 
 	width int
 	height int
-	image *ebiten.Image
 
 	audio_context *audio.Context
 	audio_players []*audio.Player
@@ -101,13 +100,9 @@ func (self *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 func (self *Game) Draw(screen *ebiten.Image) {
 
-	self.image.Clear()
-
 	for _, ent := range self.entities {
-		ent.Draw()
+		ent.Draw(screen)
 	}
-
-	screen.DrawImage(self.image, nil)
 
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("Vsync: %v -- TPS: %0.2f -- FPS: %0.2f -- Sounds: %v",
 		ebiten.IsVsyncEnabled(), ebiten.CurrentTPS(), ebiten.CurrentFPS(), len(self.audio_players)))
@@ -117,7 +112,6 @@ func (self *Game) Update() error {
 
 	if (!self.inited) {
 		self.audio_context = audio.NewContext(44100)
-		self.image = ebiten.NewImage(self.width, self.height)
 		self.entities = append(self.entities, NewEntity(self, PLAYER, 16, 16, 0, 0, "ship.png"))
 		self.inited = true
 	}
@@ -208,14 +202,14 @@ func NewEntity(game *Game, t EntityType, x float64, y float64, speedx float64, s
 	return ret
 }
 
-func (self *Entity) Draw() {
+func (self *Entity) Draw(screen *ebiten.Image) {
 
 	img := sprites[self.sprite_string]
 	e_width, e_height := img.Size()
 	opts := new(ebiten.DrawImageOptions)
 	opts.GeoM.Translate(self.x - (float64(e_width) / 2), self.y - (float64(e_height) / 2.0))
 
-	self.game.image.DrawImage(img, opts)
+	screen.DrawImage(img, opts)
 }
 
 func (self *Entity) Behave() {
